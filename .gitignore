@@ -51,3 +51,5 @@ yarn.lock
 # Visual regression test output (baseline is committed)
 test/screenshots/actual/
 test/screenshots/diff/
+.mcp.json
+.mcp.json

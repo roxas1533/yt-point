@@ -269,11 +269,16 @@
 
     function animateScore() {
       const scoreEl = document.getElementById('score');
-      const step = Math.ceil((currentScore - displayedScore) / 10);
+      const diff = currentScore - displayedScore;
+      const step = Math.ceil(Math.abs(diff) / 10) || 1;
 
       function tick() {
-        if (displayedScore < currentScore) {
-          displayedScore = Math.min(displayedScore + step, currentScore);
+        if (displayedScore !== currentScore) {
+          if (displayedScore < currentScore) {
+            displayedScore = Math.min(displayedScore + step, currentScore);
+          } else {
+            displayedScore = Math.max(displayedScore - step, currentScore);
+          }
           scoreEl.textContent = displayedScore.toLocaleString();
           updateProgress();
           requestAnimationFrame(tick);
@@ -317,6 +322,15 @@
     // Tauri event listener
     if (window.__TAURI__) {
       const { listen } = window.__TAURI__.event;
+      const { invoke } = window.__TAURI__.core;
+
+      // Fetch initial state
+      invoke('get_points').then((data) => {
+        updateScore(data.total);
+        updateStats(data);
+      });
+
+      // Listen for updates
       listen('points-update', (event) => {
         const data = event.payload;
         updateScore(data.total);

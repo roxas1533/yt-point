@@ -3,7 +3,7 @@ mod points;
 mod state;
 
 use std::sync::Arc;
-use tauri::{State, WebviewWindowBuilder};
+use tauri::{Emitter, State, WebviewWindowBuilder};
 use tokio::sync::RwLock;
 
 pub struct AppState {
@@ -41,12 +41,22 @@ async fn stop_monitoring(state: State<'_, Arc<AppState>>) -> Result<(), String> 
 }
 
 #[tauri::command]
-async fn add_manual_points(amount: i64, state: State<'_, Arc<AppState>>) -> Result<(), String> {
-    let mut points = state.points.write().await;
-    points.manual += amount;
-    points.total += amount;
+async fn add_manual_points(
+    amount: i64,
+    state: State<'_, Arc<AppState>>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let points = {
+        let mut points = state.points.write().await;
+        points.manual += amount;
+        points.total += amount;
+        points.clone()
+    };
 
     println!("Added {} manual points. Total: {}", amount, points.total);
+
+    // Emit event to viewer window
+    let _ = app.emit("points-update", &points);
 
     Ok(())
 }
@@ -58,6 +68,24 @@ async fn get_points(state: State<'_, Arc<AppState>>) -> Result<points::PointStat
 }
 
 #[tauri::command]
+async fn reset_points(
+    state: State<'_, Arc<AppState>>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let points = {
+        let mut points = state.points.write().await;
+        *points = points::PointState::default();
+        points.clone()
+    };
+
+    println!("Points reset");
+
+    let _ = app.emit("points-update", &points);
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn open_viewer_window(app: tauri::AppHandle) -> Result<(), String> {
     let _viewer = WebviewWindowBuilder::new(
         &app,
@@ -65,7 +93,7 @@ async fn open_viewer_window(app: tauri::AppHandle) -> Result<(), String> {
         tauri::WebviewUrl::App("/viewer.html".into()),
     )
     .title("YT Point - 視聴者用表示")
-    .inner_size(400.0, 300.0)
+    .inner_size(450.0, 520.0)
     .transparent(true)
     .decorations(true)
     .always_on_top(true)
@@ -91,6 +119,7 @@ pub fn run() {
             stop_monitoring,
             add_manual_points,
             get_points,
+            reset_points,
             open_viewer_window,
         ])
         .run(tauri::generate_context!())

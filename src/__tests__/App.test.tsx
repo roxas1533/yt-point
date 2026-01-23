@@ -209,4 +209,64 @@ describe("App", () => {
       expect(mockInvoke).toHaveBeenCalledWith("open_viewer_window");
     });
   });
+
+  describe("reset button", () => {
+    it("renders reset button", () => {
+      render(<App />);
+      expect(screen.getByRole("button", { name: "リセット" })).toBeInTheDocument();
+    });
+
+    it("calls reset_points when confirmed", async () => {
+      // Mock window.confirm to return true
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+      render(<App />);
+      const button = screen.getByRole("button", { name: "リセット" });
+      fireEvent.click(button);
+
+      expect(confirmSpy).toHaveBeenCalledWith("ポイントをリセットしますか？");
+      expect(mockInvoke).toHaveBeenCalledWith("reset_points");
+
+      confirmSpy.mockRestore();
+    });
+
+    it("does not call reset_points when cancelled", async () => {
+      // Mock window.confirm to return false
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+      render(<App />);
+      const button = screen.getByRole("button", { name: "リセット" });
+      fireEvent.click(button);
+
+      expect(confirmSpy).toHaveBeenCalledWith("ポイントをリセットしますか？");
+      expect(mockInvoke).not.toHaveBeenCalledWith("reset_points");
+
+      confirmSpy.mockRestore();
+    });
+
+    it("resets points to 0 after reset", async () => {
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+      const { container } = render(<App />);
+
+      // First add some points
+      const addButton = screen.getByRole("button", { name: "+10" });
+      fireEvent.click(addButton);
+
+      await vi.waitFor(() => {
+        const totalPoints = container.querySelector(".total-points");
+        expect(totalPoints).toHaveTextContent("10 pt");
+      });
+
+      // Then reset
+      const resetButton = screen.getByRole("button", { name: "リセット" });
+      fireEvent.click(resetButton);
+
+      await vi.waitFor(() => {
+        const totalPoints = container.querySelector(".total-points");
+        expect(totalPoints).toHaveTextContent("0 pt");
+      });
+
+      confirmSpy.mockRestore();
+    });
+  });
 });
