@@ -1,0 +1,16 @@
+{
+  "name": "yt-point-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun build ./index.ts --compile --outfile=build/youtube-sidecar"
+  },
+  "dependencies": {
+    "youtubei.js": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

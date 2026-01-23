@@ -1,0 +1,53 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build outputs
+target/
+*.exe
+*.msi
+
+# Sidecar build
+sidecar/build/
+sidecar/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Nix
+result
+.direnv/
+
+# Session state (auto-saved)
+session.json
+
+# Lock files (bun uses bun.lock)
+package-lock.json
+yarn.lock
+
+# Visual regression test output (baseline is committed)
+test/screenshots/actual/
+test/screenshots/diff/
