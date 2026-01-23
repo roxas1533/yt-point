@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      rust: ${{ steps.filter.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'public/**'
+              - 'test/**'
+              - 'package.json'
+              - 'vite.config.ts'
+              - 'biome.json'
+            rust:
+              - 'src-tauri/**'
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Install dependencies
+        run: nix develop --command bun install
+
+      - name: Lint (Biome)
+        run: nix develop --command bunx biome check .
+
+      - name: Format check (Biome)
+        run: nix develop --command bunx biome format .
+
+      - name: Unit tests
+        run: nix develop --command bun run test --run
+
+  rust:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Lint (Clippy)
+        run: nix develop --command cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+
+      - name: Format check (Rust)
+        run: nix develop --command cargo fmt --manifest-path src-tauri/Cargo.toml --check

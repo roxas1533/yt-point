@@ -52,6 +52,25 @@ function App() {
     }
   };
 
+  const resetPoints = async () => {
+    if (!window.confirm("ポイントをリセットしますか？")) {
+      return;
+    }
+    try {
+      await invoke("reset_points");
+      setPoints({
+        total: 0,
+        superchat: 0,
+        concurrent: 0,
+        likes: 0,
+        subscribers: 0,
+        manual: 0,
+      });
+    } catch (e) {
+      console.error("Failed to reset points:", e);
+    }
+  };
+
   return (
     <div className="container">
       <h1>YT Point</h1>
@@ -88,6 +107,9 @@ function App() {
         <h2>現在のポイント</h2>
         <div className="points-display">
           <div className="total-points">{points.total} pt</div>
+          <button type="button" className="reset-button" onClick={resetPoints}>
+            リセット
+          </button>
         </div>
         <div className="points-breakdown">
           <div className="point-item">

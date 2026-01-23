@@ -67,6 +67,10 @@
               pkgs.webkitgtk_4_1
             ]}:$LD_LIBRARY_PATH"
             export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = [ pkgs.noto-fonts-cjk-sans ]; }}"
+
+            # WSLg: Force X11 backend for correct WebKitGTK rendering
+            export GDK_BACKEND=x11
+
             echo "yt-point development environment loaded"
             echo "Run 'bun install' and 'bun run tauri:dev' to start development"
           '';
