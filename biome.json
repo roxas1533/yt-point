@@ -23,7 +23,18 @@
       "semicolons": "always"
     }
   },
+  "css": {
+    "parser": {
+      "cssModules": true
+    },
+    "linter": {
+      "enabled": false
+    },
+    "formatter": {
+      "enabled": false
+    }
+  },
   "files": {
-    "includes": ["src/**", "sidecar/**/*.ts"]
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "sidecar/**/*.ts"]
   }
 }

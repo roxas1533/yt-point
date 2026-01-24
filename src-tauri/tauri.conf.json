@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "identifier": "com.ro.yt-point",
   "build": {
-    "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
@@ -40,6 +39,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/youtube-sidecar"
     ]
   }
 }
