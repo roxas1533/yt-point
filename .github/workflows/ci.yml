@@ -66,6 +66,12 @@ jobs:
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
 
+      - name: Install sidecar dependencies
+        run: nix develop --command bash -c "cd sidecar && bun install"
+
+      - name: Build sidecar
+        run: nix develop --command bun run sidecar:build
+
       - name: Lint (Clippy)
         run: nix develop --command cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
 

@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #1a1a2e;
+  --color-surface: #16213e;
+  --color-primary: #0f3460;
+  --color-accent: #e94560;
+  --color-text: #eee;
+  --color-muted: #888;
+
+  --font-sans: "Yu Gothic UI", "Meiryo", "Segoe UI", system-ui, -apple-system, "Noto Sans CJK JP", sans-serif;
+}
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html,
+  body,
+  #root {
+    @apply w-full h-full;
+  }
+
+  body {
+    @apply font-sans bg-background text-text min-h-screen;
+  }
+
+  input[type="text"] {
+    @apply w-full py-3 px-4 text-base bg-background border border-white/20 rounded-lg text-text outline-none transition-colors duration-200;
+  }
+
+  input[type="text"]:focus {
+    @apply border-accent;
+  }
+
+  input[type="text"].shake {
+    @apply border-accent;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  input[type="text"]:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  button {
+    @apply py-3 px-6 text-base font-medium bg-primary border-none rounded-lg text-text cursor-pointer transition-all duration-200;
+  }
+
+  button:hover {
+    @apply bg-[#1a4980] -translate-y-0.5;
+  }
+
+  button:active {
+    @apply translate-y-0;
+  }
+
+  button:disabled {
+    @apply opacity-60 cursor-not-allowed translate-y-0;
+  }
+
+  button:disabled:hover {
+    @apply translate-y-0;
+  }
+}
+
+@layer components {
+  .container {
+    @apply w-full max-w-[850px] mx-auto p-6 min-h-screen transition-colors duration-500;
+  }
+
+  .container.disconnected {
+    @apply bg-[#0d0d1a];
+  }
+
+  .container.connected {
+    @apply bg-[#1a2a3e];
+  }
+
+  .section {
+    @apply bg-surface rounded-xl p-6 mb-6 border border-white/10 transition-colors duration-500;
+  }
+
+  .container.connected .section {
+    @apply bg-[#1e3a5f] border-white/15;
+  }
+
+  .section h2 {
+    @apply text-lg mb-4 text-muted;
+  }
+
+  .header {
+    @apply flex items-start gap-4 mb-6;
+  }
+
+  .header-title {
+    @apply flex-1;
+  }
+
+  .header-title h1 {
+    @apply m-0;
+  }
+
+  .header-title .subtitle {
+    @apply mb-0;
+  }
+
+  .login-button {
+    @apply flex flex-col items-center gap-1 py-2 px-3 text-xs bg-[#cc0000] hover:bg-[#ff0000];
+  }
+
+  .login-button.logged-in {
+    @apply bg-[#2e7d32] hover:bg-[#388e3c];
+  }
+
+  .login-button svg {
+    @apply shrink-0;
+  }
+
+  .login-status {
+    @apply text-[10px] opacity-80;
+  }
+
+  .title {
+    @apply text-4xl font-bold bg-gradient-to-r from-accent to-[#ff6b6b] bg-clip-text text-transparent;
+  }
+
+  .subtitle {
+    @apply text-muted mb-8;
+  }
+
+  .input-group {
+    @apply mb-4;
+  }
+
+  .input-row {
+    @apply flex items-center gap-4 mb-4;
+  }
+
+  .input-row input[type="text"] {
+    @apply flex-1;
+  }
+
+  .monitoring-control {
+    @apply flex flex-col items-center gap-1 shrink-0;
+  }
+
+  .switch-wrapper {
+    @apply relative;
+  }
+
+  .switch-overlay {
+    @apply absolute inset-0 cursor-pointer bg-transparent border-none p-0;
+  }
+
+  .toggle-label {
+    @apply text-xs text-muted;
+  }
+
+  .button-group {
+    @apply flex gap-2 flex-wrap;
+  }
+
+  .viewer-button {
+    @apply inline-flex items-center gap-2 py-3 px-6 text-base font-medium bg-primary border-none rounded-lg text-text cursor-pointer transition-all duration-200 select-none;
+  }
+
+  .viewer-button:hover {
+    @apply bg-[#1a4980] -translate-y-0.5;
+  }
+
+  .viewer-button:active {
+    @apply translate-y-0;
+  }
+
+  .viewer-button[draggable="true"] {
+    @apply cursor-grab;
+  }
+
+  .viewer-button[draggable="true"]:active {
+    @apply cursor-grabbing;
+  }
+
+  .button-primary {
+    @apply bg-accent;
+  }
+
+  .button-primary:hover {
+    @apply bg-[#ff5070];
+  }
+
+  .button-danger {
+    @apply bg-[#c0392b];
+  }
+
+  .button-danger:hover {
+    @apply bg-[#e74c3c];
+  }
+
+  .points-display {
+    @apply text-center mb-6 flex flex-col items-center gap-4;
+  }
+
+  .reset-button {
+    @apply ml-auto bg-[#4a3030] text-[#ffaaaa];
+  }
+
+  .reset-button:hover {
+    @apply bg-[#5a3838] text-[#ffcccc];
+  }
+
+  .total-points {
+    @apply text-6xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+  }
+
+  .points-breakdown {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .point-item {
+    @apply flex flex-col p-3 bg-white/5 rounded-lg;
+  }
+
+  .point-item .label {
+    @apply text-sm text-muted mb-1;
+  }
+
+  .point-item .value {
+    @apply text-xl font-semibold;
+  }
+
+  .point-item .raw {
+    @apply text-xs text-muted mt-1;
+  }
+}

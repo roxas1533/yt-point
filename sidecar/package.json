@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "bun run index.ts",
-    "build": "bun build ./index.ts --compile --outfile=build/youtube-sidecar"
+    "build": "bun build ./index.ts --compile --minify --outfile=../src-tauri/binaries/youtube-sidecar-${npm_config_target:-x86_64-unknown-linux-gnu}",
+    "build:linux": "bun build ./index.ts --compile --minify --outfile=../src-tauri/binaries/youtube-sidecar-x86_64-unknown-linux-gnu",
+    "build:mac": "bun build ./index.ts --compile --minify --outfile=../src-tauri/binaries/youtube-sidecar-aarch64-apple-darwin",
+    "build:win": "bun build ./index.ts --compile --minify --outfile=../src-tauri/binaries/youtube-sidecar-x86_64-pc-windows-msvc.exe"
   },
   "dependencies": {
     "youtubei.js": "^16.0.0"
