@@ -18,7 +18,8 @@
         "height": 650,
         "minWidth": 700,
         "minHeight": 500,
-        "resizable": true
+        "resizable": true,
+        "backgroundColor": "#1a1a2e"
       }
     ],
     "security": {
@@ -42,6 +43,15 @@
     ],
     "externalBin": [
       "binaries/youtube-sidecar"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "languages": ["Japanese"],
+        "displayLanguageSelector": false
+      },
+      "wix": {
+        "language": "ja-JP"
+      }
+    }
   }
 }
