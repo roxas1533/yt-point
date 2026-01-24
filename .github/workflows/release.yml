@@ -30,48 +30,54 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Get version
+      - name: Get version from config
         id: version
         shell: bash
         run: |
           VERSION=$(cat src-tauri/tauri.conf.json | grep '"version"' | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+          echo "Config version: $VERSION"
 
-      - name: Check if tag exists
-        id: check_tag
+      - name: Validate version
         shell: bash
         run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} already exists, skipping release"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} does not exist, will create release"
+          CONFIG_VERSION="${{ steps.version.outputs.version }}"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+
+          # Extract version from commit message (patterns: "0.1.1リリース", "Ver.0.1.1", "v0.1.1")
+          EXPECTED_VERSION=$(echo "$COMMIT_MSG" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+
+          # If commit has version, it must match config
+          if [ -n "$EXPECTED_VERSION" ] && [ "$EXPECTED_VERSION" != "$CONFIG_VERSION" ]; then
+            echo "::error::Version mismatch! Commit expects $EXPECTED_VERSION but config has $CONFIG_VERSION"
+            exit 1
           fi
 
+          # Tag must not exist (master merge = new release)
+          if git rev-parse "v$CONFIG_VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$CONFIG_VERSION already exists. Please update version in config files."
+            exit 1
+          fi
+
+          echo "Version validated: $CONFIG_VERSION"
+
       - name: Install frontend dependencies
-        if: steps.check_tag.outputs.exists == 'false'
         run: bun install
 
       - name: Install sidecar dependencies
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           cd sidecar
           bun install
 
       - name: Build sidecar for Windows
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           cd sidecar
           bun run build:win
 
       - name: Build Tauri app
-        if: steps.check_tag.outputs.exists == 'false'
         run: bun tauri build
 
       - name: Create tag
-        if: steps.check_tag.outputs.exists == 'false'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -80,7 +86,6 @@ jobs:
           git push origin "v${{ steps.version.outputs.version }}"
 
       - name: Create Release
-        if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}

@@ -1,5 +1,4 @@
-import { Innertube, YTNodes } from "youtubei.js";
-import type { LiveChat } from "youtubei.js/dist/src/parser/youtube";
+import { Innertube, type YT, YTNodes } from "youtubei.js";
 
 interface RpcRequest {
   id: number;
@@ -40,7 +39,7 @@ interface PushEvent {
 }
 
 let youtube: Innertube | null = null;
-let liveChatInstance: LiveChat | null = null;
+let liveChatInstance: YT.LiveChat | null = null;
 let storedCookies: string | null = null;
 const encoder = new TextEncoder();
 
@@ -414,10 +413,53 @@ async function handleRequest(request: RpcRequest): Promise<RpcResponse> {
   }
 }
 
+// Check if parent process is still alive
+function checkParentProcess(): boolean {
+  const ppid = process.ppid;
+  if (ppid === 0 || ppid === 1) {
+    // Parent is init/system - we're orphaned
+    return false;
+  }
+  try {
+    // Send signal 0 to check if process exists (works on Unix)
+    process.kill(ppid, 0);
+    return true;
+  } catch {
+    // On Windows, process.kill may not work, check via different method
+    if (process.platform === "win32") {
+      try {
+        // Try to check if parent PID exists using Bun.spawnSync
+        const result = Bun.spawnSync(["tasklist", "/FI", `PID eq ${ppid}`, "/NH"]);
+        const output = result.stdout.toString();
+        return output.includes(String(ppid));
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
 async function main() {
   const decoder = new TextDecoder();
 
-  console.error("YouTube sidecar started");
+  console.error("YouTube sidecar started, parent PID:", process.ppid);
+
+  // Start parent process monitor
+  const parentCheckInterval = setInterval(() => {
+    if (!checkParentProcess()) {
+      console.error("Parent process died, exiting...");
+      clearInterval(parentCheckInterval);
+      process.exit(0);
+    }
+  }, 2000); // Check every 2 seconds
+
+  // Also exit when stdin closes (parent terminated)
+  process.stdin.on("close", () => {
+    console.error("Stdin closed, exiting...");
+    clearInterval(parentCheckInterval);
+    process.exit(0);
+  });
 
   for await (const chunk of Bun.stdin.stream()) {
     const lines = decoder.decode(chunk).trim().split("\n");
@@ -435,6 +477,11 @@ async function main() {
       }
     }
   }
+
+  // If stdin stream ends, exit
+  console.error("Stdin stream ended, exiting...");
+  clearInterval(parentCheckInterval);
+  process.exit(0);
 }
 
 main().catch(console.error);
