@@ -5,9 +5,9 @@ mod state;
 mod web_server;
 
 use std::sync::Arc;
-use tauri::{webview::Cookie, Emitter, Manager, State, WebviewWindowBuilder};
-use tokio::sync::{broadcast, mpsc, RwLock};
-use tokio::time::{interval, Duration};
+use tauri::{Emitter, Manager, State, WebviewWindowBuilder, webview::Cookie};
+use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio::time::{Duration, interval};
 
 use sidecar::SidecarManager;
 use web_server::PointsPayload;
@@ -69,7 +69,10 @@ async fn start_monitoring(
 
     // Initialize YouTube client
     let is_authenticated = sidecar.init().await?;
-    println!("YouTube client initialized (authenticated: {})", is_authenticated);
+    println!(
+        "YouTube client initialized (authenticated: {})",
+        is_authenticated
+    );
 
     // Store authentication status
     {

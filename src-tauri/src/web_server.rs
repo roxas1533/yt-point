@@ -7,7 +7,7 @@ use axum::{
 use futures::stream::Stream;
 use std::{convert::Infallible, net::TcpListener, sync::Arc, time::Duration};
 use tokio::sync::broadcast;
-use tokio_stream::{wrappers::BroadcastStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use tower_http::cors::CorsLayer;
 
 use crate::points::{PointState, RawMetrics};

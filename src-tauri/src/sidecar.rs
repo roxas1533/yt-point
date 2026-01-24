@@ -210,8 +210,11 @@ impl SidecarManager {
     }
 
     pub async fn set_cookies(&self, cookies: &str) -> Result<(), String> {
-        self.call("setCookies", Some(serde_json::json!({ "cookies": cookies })))
-            .await?;
+        self.call(
+            "setCookies",
+            Some(serde_json::json!({ "cookies": cookies })),
+        )
+        .await?;
         Ok(())
     }
 
@@ -309,10 +312,11 @@ pub fn extract_video_id(url_or_id: &str) -> Result<String, String> {
             // youtu.be/VIDEO_ID
             if host == "youtu.be"
                 && let Some(path) = url.path_segments()
-                    && let Some(id) = path.into_iter().next()
-                        && !id.is_empty() {
-                            return Ok(id.to_string());
-                        }
+                && let Some(id) = path.into_iter().next()
+                && !id.is_empty()
+            {
+                return Ok(id.to_string());
+            }
         }
     }
 
