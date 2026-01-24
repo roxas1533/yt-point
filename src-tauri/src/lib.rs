@@ -244,7 +244,8 @@ struct PointsUpdatePayload {
 async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
     let (points, metrics) = {
         let metrics = state.raw_metrics.read().await;
-        let mut calculated = points::PointState::calculate_from_metrics(&metrics, &config::POINTS_CONFIG);
+        let mut calculated =
+            points::PointState::calculate_from_metrics(&metrics, &config::POINTS_CONFIG);
 
         // Add manual points
         let current_points = state.points.read().await;
