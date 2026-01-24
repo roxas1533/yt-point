@@ -131,14 +131,14 @@ describe("App", () => {
         render(<App />);
       });
       const input = screen.getByPlaceholderText("YouTubeライブ配信URLまたはVideo ID");
-      const switchWrapper = screen.getByRole("switch").parentElement;
+      const overlay = screen.getByRole("button", { name: "URLを入力してください" });
 
       // Input should not have shake class initially
       expect(input).not.toHaveClass("shake");
 
-      // Click the switch wrapper while input is empty (switch is disabled)
+      // Click the overlay while input is empty (switch is disabled)
       await act(async () => {
-        fireEvent.click(switchWrapper!);
+        fireEvent.click(overlay);
       });
 
       // Input should have shake class

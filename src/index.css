@@ -158,7 +158,7 @@
   }
 
   .switch-overlay {
-    @apply absolute inset-0 cursor-pointer;
+    @apply absolute inset-0 cursor-pointer bg-transparent border-none p-0;
   }
 
   .toggle-label {

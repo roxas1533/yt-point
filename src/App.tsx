@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { SquareArrowOutUpRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 
@@ -144,7 +144,7 @@ function App() {
     }
   };
 
-  const checkLoginStatus = async () => {
+  const checkLoginStatus = useCallback(async () => {
     try {
       const cookies = await invoke<string>("get_youtube_cookies");
       const loggedIn = cookies.includes("SAPISID") && cookies.includes("__Secure-3PSID");
@@ -154,7 +154,7 @@ function App() {
       setIsLoggedIn(false);
       return false;
     }
-  };
+  }, []);
 
   // Check login status and get server URL on mount
   useEffect(() => {
@@ -162,8 +162,7 @@ function App() {
     invoke<string | null>("get_server_url").then((url) => {
       setServerUrl(url);
     });
-  }, []);
-
+  }, [checkLoginStatus]);
 
   return (
     <div className={`container ${isMonitoring ? "connected" : "disconnected"}`}>
@@ -178,8 +177,8 @@ function App() {
           onClick={openYouTubeLogin}
           title={isLoggedIn ? "YouTube ログイン済み" : "YouTube にログイン"}
         >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
           </svg>
           <span className="login-status">{isLoggedIn ? "ログイン済" : "ログイン"}</span>
         </button>
@@ -206,16 +205,19 @@ function App() {
                 disabled={!isMonitoring && (isLoading || !videoUrl.trim())}
               />
               {!isMonitoring && !videoUrl.trim() && (
-                <div
+                <button
+                  type="button"
                   className="switch-overlay"
                   onClick={() => setInputShake(true)}
+                  aria-label="URLを入力してください"
                 />
               )}
             </div>
           </div>
         </div>
         <div className="button-group">
-          <div
+          <button
+            type="button"
             className="viewer-button"
             draggable={!!serverUrl}
             onDragStart={(e) => {
@@ -226,14 +228,11 @@ function App() {
               }
             }}
             onClick={openViewerWindow}
-            onKeyDown={(e) => e.key === "Enter" && openViewerWindow()}
-            role="button"
-            tabIndex={0}
             title={serverUrl ? `OBSへドラッグ: ${serverUrl}` : "視聴者用ウィンドウを開く"}
           >
             <span>視聴者用ウィンドウ</span>
             <SquareArrowOutUpRight size={18} />
-          </div>
+          </button>
         </div>
       </div>
 
@@ -311,7 +310,6 @@ function App() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }
