@@ -31,6 +31,7 @@ target/
 # Sidecar build
 sidecar/build/
 sidecar/node_modules/
+src-tauri/binaries/
 
 # Environment
 .env

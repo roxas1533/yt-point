@@ -41,6 +41,7 @@
             pkg-config
             openssl
             glib
+            glib-networking
             gtk3
             libsoup_3
             webkitgtk_4_1
@@ -67,6 +68,9 @@
               pkgs.webkitgtk_4_1
             ]}:$LD_LIBRARY_PATH"
             export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = [ pkgs.noto-fonts-cjk-sans ]; }}"
+
+            # GIO TLS support (glib-networking)
+            export GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules/"
 
             # WSLg: Force X11 backend for correct WebKitGTK rendering
             export GDK_BACKEND=x11

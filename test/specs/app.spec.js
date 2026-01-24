@@ -52,11 +52,16 @@ describe("YT Point Application", () => {
     });
   });
 
-  describe("Monitoring Buttons", () => {
-    it("should display the start monitoring button", async () => {
-      const button = await $("button.primary");
-      await expect(button).toBeDisplayed();
-      await expect(button).toHaveText("監視開始");
+  describe("Monitoring Controls", () => {
+    it("should display the monitoring toggle switch", async () => {
+      const toggle = await $(".monitoring-control button[role='switch']");
+      await expect(toggle).toBeDisplayed();
+    });
+
+    it("should display the toggle label", async () => {
+      const label = await $(".toggle-label");
+      await expect(label).toBeDisplayed();
+      await expect(label).toHaveText("接続");
     });
 
     it("should display the viewer window button", async () => {
@@ -93,14 +98,20 @@ describe("YT Point Application", () => {
     });
 
     it("should update points when clicking +1 button", async () => {
-      // Get initial value
+      // Wait for element to be available
       const totalPoints = await $(".total-points");
+      await totalPoints.waitForExist({ timeout: 5000 });
+
+      // Get initial value
       const initialText = await totalPoints.getText();
       const initialValue = parseInt(initialText.replace(" pt", ""));
 
       // Click button
       const button = await $("button=+1");
       await button.click();
+
+      // Wait a bit for the event to propagate
+      await browser.pause(500);
 
       // Verify points increased
       await browser.waitUntil(
@@ -109,7 +120,7 @@ describe("YT Point Application", () => {
           const newValue = parseInt(newText.replace(" pt", ""));
           return newValue === initialValue + 1;
         },
-        { timeout: 5000, timeoutMsg: "Points did not increase after clicking +1" }
+        { timeout: 5000, interval: 200, timeoutMsg: "Points did not increase after clicking +1" }
       );
     });
 
@@ -123,6 +134,9 @@ describe("YT Point Application", () => {
       const button = await $("button=+10");
       await button.click();
 
+      // Wait a bit for the event to propagate
+      await browser.pause(500);
+
       // Verify points increased
       await browser.waitUntil(
         async () => {
@@ -130,7 +144,7 @@ describe("YT Point Application", () => {
           const newValue = parseInt(newText.replace(" pt", ""));
           return newValue === initialValue + 10;
         },
-        { timeout: 5000, timeoutMsg: `Points did not increase after clicking +10` }
+        { timeout: 5000, interval: 200, timeoutMsg: `Points did not increase after clicking +10` }
       );
     });
   });
@@ -207,19 +221,15 @@ describe("YT Point Application", () => {
       await expect(header).toHaveText("LIVE POINTS");
 
       // Verify score display
-      const score = await $("#score");
+      const score = await $(".score");
       await expect(score).toBeDisplayed();
 
       // Verify stats
-      const superchat = await $("#superchat");
-      const concurrent = await $("#concurrent");
-      const likes = await $("#likes");
-      const subscribers = await $("#subscribers");
-
-      await expect(superchat).toBeDisplayed();
-      await expect(concurrent).toBeDisplayed();
-      await expect(likes).toBeDisplayed();
-      await expect(subscribers).toBeDisplayed();
+      const statValues = await $$(".stat-value");
+      expect(statValues.length).toBe(4);
+      for (const stat of statValues) {
+        await expect(stat).toBeDisplayed();
+      }
     });
 
     it("should capture viewer window screenshot", async () => {
@@ -253,7 +263,7 @@ describe("YT Point Application", () => {
       await browser.switchToWindow(viewerHandle);
       await browser.pause(500);
 
-      const score = await $("#score");
+      const score = await $(".score");
       const scoreText = await score.getText();
       expect(parseInt(scoreText.replace(/,/g, ""))).toBeGreaterThan(0);
     });
@@ -287,7 +297,7 @@ describe("YT Point Application", () => {
       // Wait for viewer to update
       await browser.waitUntil(
         async () => {
-          const score = await $("#score");
+          const score = await $(".score");
           const scoreText = await score.getText();
           return parseInt(scoreText.replace(/,/g, "")) === 0;
         },
