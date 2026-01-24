@@ -1,7 +1,6 @@
 mod config;
 mod points;
 mod sidecar;
-mod state;
 mod web_server;
 
 use std::sync::Arc;
@@ -15,7 +14,6 @@ use web_server::PointsPayload;
 pub struct AppState {
     pub is_monitoring: RwLock<bool>,
     pub points: RwLock<points::PointState>,
-    pub config: RwLock<config::Config>,
     pub sidecar: RwLock<Option<SidecarManager>>,
     pub raw_metrics: RwLock<points::RawMetrics>,
     pub monitoring_video_id: RwLock<Option<String>>,
@@ -169,11 +167,7 @@ async fn start_monitoring(
     let state_clone = state.inner().clone();
     let app_clone = app.clone();
     tauri::async_runtime::spawn(async move {
-        let polling_interval = {
-            let config = state_clone.config.read().await;
-            config.polling.interval_seconds
-        };
-        let mut ticker = interval(Duration::from_secs(polling_interval));
+        let mut ticker = interval(Duration::from_secs(config::POLLING_INTERVAL_SECONDS));
 
         loop {
             ticker.tick().await;
@@ -250,8 +244,7 @@ struct PointsUpdatePayload {
 async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
     let (points, metrics) = {
         let metrics = state.raw_metrics.read().await;
-        let config = state.config.read().await;
-        let mut calculated = points::PointState::calculate_from_metrics(&metrics, &config.points);
+        let mut calculated = points::PointState::calculate_from_metrics(&metrics, &config::POINTS_CONFIG);
 
         // Add manual points
         let current_points = state.points.read().await;
@@ -486,7 +479,6 @@ pub fn run() {
     let app_state = Arc::new(AppState {
         is_monitoring: RwLock::new(false),
         points: RwLock::new(points::PointState::default()),
-        config: RwLock::new(config::Config::load().unwrap_or_default()),
         sidecar: RwLock::new(None),
         raw_metrics: RwLock::new(points::RawMetrics::default()),
         monitoring_video_id: RwLock::new(None),
