@@ -285,6 +285,18 @@ impl Default for SidecarManager {
     }
 }
 
+impl Drop for SidecarManager {
+    fn drop(&mut self) {
+        // Try to kill the sidecar synchronously when dropped
+        if let Ok(mut guard) = self.child.try_lock()
+            && let Some(child) = guard.take()
+        {
+            let _ = child.kill();
+            println!("Sidecar killed on drop");
+        }
+    }
+}
+
 /// Extract video ID from YouTube URL or return as-is if already an ID
 pub fn extract_video_id(url_or_id: &str) -> Result<String, String> {
     let url_or_id = url_or_id.trim();

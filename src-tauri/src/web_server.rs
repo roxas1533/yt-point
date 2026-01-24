@@ -25,8 +25,8 @@ pub struct WebServer {
 
 impl WebServer {
     pub fn new(tx: broadcast::Sender<PointsPayload>) -> Option<Self> {
-        // Find available port in range 1420-1450
-        let port = (1420..=1450).find(|&p| TcpListener::bind(("127.0.0.1", p)).is_ok())?;
+        // Find available port in range 1430-1460 (avoid 1420 used by vite dev server)
+        let port = (1430..=1460).find(|&p| TcpListener::bind(("127.0.0.1", p)).is_ok())?;
         Some(Self { port, tx })
     }
 
