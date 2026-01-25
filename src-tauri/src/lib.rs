@@ -109,7 +109,7 @@ async fn start_monitoring(
         *metrics = points::RawMetrics {
             superchat_amount: 0,
             concurrent_viewers: live_info.concurrent_viewers,
-            like_count: live_info.like_count,
+            like_count: live_info.like_count.unwrap_or(0),
             initial_subscribers,
             current_subscribers: initial_subscribers,
         };
@@ -228,7 +228,7 @@ async fn update_metrics(state: &Arc<AppState>) -> Result<(), String> {
     {
         let mut metrics = state.raw_metrics.write().await;
         metrics.concurrent_viewers = live_info.concurrent_viewers;
-        metrics.like_count = live_info.like_count;
+        metrics.like_count = live_info.like_count.unwrap_or(0);
         metrics.current_subscribers = current_subscribers;
     }
 
@@ -400,7 +400,7 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
     }
 
     // Create new window
-    let _login_window = WebviewWindowBuilder::new(
+    let login_window = WebviewWindowBuilder::new(
         &app,
         "youtube-login",
         tauri::WebviewUrl::External("https://studio.youtube.com".parse().unwrap()),
@@ -409,6 +409,26 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
     .inner_size(1000.0, 700.0)
     .build()
     .map_err(|e| e.to_string())?;
+
+    // Listen for window close and check login status
+    let app_handle = app.clone();
+    login_window.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { .. } = event {
+            let app = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                // Get cookies before window is destroyed
+                if let Some(window) = app.get_webview_window("youtube-login") {
+                    let url: url::Url = "https://www.youtube.com".parse().unwrap();
+                    if let Ok(cookies) = window.cookies_for_url(url) {
+                        let has_sapisid = cookies.iter().any(|c| c.name() == "SAPISID");
+                        let has_secure_3psid = cookies.iter().any(|c| c.name() == "__Secure-3PSID");
+                        let is_logged_in = has_sapisid && has_secure_3psid;
+                        let _ = app.emit("youtube-login-status", is_logged_in);
+                    }
+                }
+            });
+        }
+    });
 
     Ok(())
 }
