@@ -164,6 +164,16 @@ function App() {
     });
   }, [checkLoginStatus]);
 
+  // Listen for login status from YouTube login window close
+  useEffect(() => {
+    const unlisten = listen<boolean>("youtube-login-status", (event) => {
+      setIsLoggedIn(event.payload);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
   return (
     <div className={`container ${isMonitoring ? "connected" : "disconnected"}`}>
       <header className="header">

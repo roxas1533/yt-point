@@ -55,8 +55,8 @@ pub struct LiveInfo {
     pub channel_name: String,
     #[serde(rename = "concurrentViewers")]
     pub concurrent_viewers: i64,
-    #[serde(rename = "likeCount")]
-    pub like_count: i64,
+    #[serde(rename = "likeCount", default)]
+    pub like_count: Option<i64>,
     #[serde(rename = "isLive")]
     pub is_live: bool,
 }
