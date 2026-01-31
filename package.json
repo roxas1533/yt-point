@@ -18,7 +18,7 @@
     "format": "biome format --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:e2e": "wdio run wdio.conf.js"
+    "test:e2e": "/nix/store/4i5h4acwfks571bagg651zdp0fybv93s-nodejs-20.19.4/bin/node ./node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js"
   },
   "dependencies": {
     "@radix-ui/react-switch": "^1.2.6",
