@@ -302,7 +302,9 @@ function App() {
               <div className="point-details">
                 <div className="detail-row">
                   <span className="detail-label">値</span>
-                  <span className="detail-value">{metrics.superchat_amount.toLocaleString()}円</span>
+                  <span className="detail-value">
+                    {metrics.superchat_amount.toLocaleString()}円
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">レート</span>
@@ -319,7 +321,9 @@ function App() {
               <div className="point-details">
                 <div className="detail-row">
                   <span className="detail-label">値</span>
-                  <span className="detail-value">{metrics.concurrent_viewers.toLocaleString()}人</span>
+                  <span className="detail-value">
+                    {metrics.concurrent_viewers.toLocaleString()}人
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">レート</span>
@@ -327,7 +331,9 @@ function App() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">金額</span>
-                  <span className="detail-value result">{points.concurrent.toLocaleString()}円</span>
+                  <span className="detail-value result">
+                    {points.concurrent.toLocaleString()}円
+                  </span>
                 </div>
               </div>
             </div>
@@ -353,7 +359,9 @@ function App() {
               <div className="point-details">
                 <div className="detail-row">
                   <span className="detail-label">値</span>
-                  <span className="detail-value">{(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}人</span>
+                  <span className="detail-value">
+                    {(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}人
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">レート</span>
@@ -361,7 +369,9 @@ function App() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">金額</span>
-                  <span className="detail-value result">{points.subscribers.toLocaleString()}円</span>
+                  <span className="detail-value result">
+                    {points.subscribers.toLocaleString()}円
+                  </span>
                 </div>
               </div>
             </div>
@@ -378,7 +388,9 @@ function App() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">金額</span>
-                  <span className="detail-value result">{(points.manual * config.manual_rate).toLocaleString()}円</span>
+                  <span className="detail-value result">
+                    {(points.manual * config.manual_rate).toLocaleString()}円
+                  </span>
                 </div>
               </div>
             </div>
@@ -395,7 +407,9 @@ function App() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">金額</span>
-                  <span className="detail-value result">{(points.visitor * config.visitor_rate).toLocaleString()}円</span>
+                  <span className="detail-value result">
+                    {(points.visitor * config.visitor_rate).toLocaleString()}円
+                  </span>
                 </div>
               </div>
             </div>
