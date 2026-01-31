@@ -13,11 +13,15 @@ pub static POINTS_CONFIG: LazyLock<PointsConfig> =
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointsConfig {
     /// スーパーチャットのレート（円 / ポイント）
-    pub superchat_rate: i64,
+    pub superchat_rate: f64,
     /// 同時接続者数のレート（人 / ポイント）
-    pub concurrent_rate: i64,
+    pub concurrent_rate: f64,
     /// 高評価のレート（件 / ポイント）
-    pub like_rate: i64,
+    pub like_rate: f64,
     /// 新規登録者のレート（人 / ポイント）
-    pub subscriber_rate: i64,
+    pub subscriber_rate: f64,
+    /// 埼玉ボーナスのレート（1カウント / ポイント）
+    pub manual_rate: f64,
+    /// ライバー訪問のレート（1人につき200円）
+    pub visitor_rate: f64,
 }

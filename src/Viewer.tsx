@@ -10,6 +10,7 @@ interface PointState {
   likes: number;
   subscribers: number;
   manual: number;
+  visitor: number;
 }
 
 interface RawMetrics {
@@ -25,7 +26,7 @@ interface PointsUpdatePayload {
   metrics: RawMetrics;
 }
 
-const TARGET_POINTS = 1000;
+const TARGET_POINTS = 5000;
 
 function Viewer() {
   const [points, setPoints] = useState<PointState>({
@@ -35,6 +36,7 @@ function Viewer() {
     likes: 0,
     subscribers: 0,
     manual: 0,
+    visitor: 0,
   });
   const [metrics, setMetrics] = useState<RawMetrics>({
     superchat_amount: 0,
@@ -122,7 +124,7 @@ function Viewer() {
   return (
     <div className="viewer-container">
       <div className="header">
-        <div className="title">LIVE POINTS</div>
+        <div className="title">合計</div>
       </div>
 
       <div className="score-section">
@@ -131,7 +133,7 @@ function Viewer() {
 
       <div className="progress-section">
         <div className="progress-label">
-          <span>Progress</span>
+          <span>進捗</span>
           <span>
             {displayedScore.toLocaleString()} / {TARGET_POINTS.toLocaleString()}
           </span>
@@ -145,26 +147,30 @@ function Viewer() {
 
       <div className="stats">
         <div className="stat-item">
-          <div className="stat-icon">💰</div>
           <div className="stat-value">{metrics.superchat_amount.toLocaleString()}</div>
-          <div className="stat-label">Superchat</div>
+          <div className="stat-label">スーパーチャット</div>
         </div>
         <div className="stat-item">
-          <div className="stat-icon">👥</div>
           <div className="stat-value">{metrics.concurrent_viewers.toLocaleString()}</div>
-          <div className="stat-label">Viewers</div>
+          <div className="stat-label">同時視聴者数</div>
         </div>
         <div className="stat-item">
-          <div className="stat-icon">👍</div>
           <div className="stat-value">{metrics.like_count.toLocaleString()}</div>
-          <div className="stat-label">Likes</div>
+          <div className="stat-label">高評価数</div>
         </div>
         <div className="stat-item">
-          <div className="stat-icon">🔔</div>
           <div className="stat-value">
             {(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}
           </div>
-          <div className="stat-label">New Subs</div>
+          <div className="stat-label">新規登録者数</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">{points.manual.toLocaleString()}</div>
+          <div className="stat-label">埼玉ボーナス</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">{points.visitor.toLocaleString()}</div>
+          <div className="stat-label">ライバー訪問</div>
         </div>
       </div>
 

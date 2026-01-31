@@ -14,8 +14,10 @@ pub struct PointState {
     pub likes: i64,
     /// 新規登録者からのポイント
     pub subscribers: i64,
-    /// 手動追加ポイント
+    /// 手動追加ポイント（埼玉ボーナス）
     pub manual: i64,
+    /// ライバー訪問
+    pub visitor: i64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -34,11 +36,11 @@ pub struct RawMetrics {
 
 impl PointState {
     pub fn calculate_from_metrics(metrics: &RawMetrics, config: &PointsConfig) -> Self {
-        let superchat = metrics.superchat_amount / config.superchat_rate;
-        let concurrent = metrics.concurrent_viewers / config.concurrent_rate;
-        let likes = metrics.like_count / config.like_rate;
+        let superchat = (metrics.superchat_amount as f64 / config.superchat_rate) as i64;
+        let concurrent = (metrics.concurrent_viewers as f64 / config.concurrent_rate) as i64;
+        let likes = (metrics.like_count as f64 / config.like_rate) as i64;
         let new_subscribers = metrics.current_subscribers - metrics.initial_subscribers;
-        let subscribers = new_subscribers / config.subscriber_rate;
+        let subscribers = (new_subscribers as f64 / config.subscriber_rate) as i64;
 
         Self {
             total: superchat + concurrent + likes + subscribers,
@@ -47,6 +49,7 @@ impl PointState {
             likes,
             subscribers,
             manual: 0,
+            visitor: 0,
         }
     }
 

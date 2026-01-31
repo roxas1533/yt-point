@@ -46,7 +46,7 @@
             libsoup_3
             webkitgtk_4_1
             librsvg
-
+            mesa
             # SQLite
             sqlite
 
@@ -66,6 +66,7 @@
               pkgs.gtk3
               pkgs.libsoup_3
               pkgs.webkitgtk_4_1
+              pkgs.mesa
             ]}:$LD_LIBRARY_PATH"
             export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = [ pkgs.noto-fonts-cjk-sans ]; }}"
 
