@@ -468,8 +468,8 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
         if let tauri::WindowEvent::CloseRequested { .. } = event {
             let app = app_handle.clone();
             tauri::async_runtime::spawn(async move {
-                // Get cookies before window is destroyed
-                if let Some(window) = app.get_webview_window("youtube-login") {
+                // Use main window to check cookies (cookie store is shared across windows)
+                if let Some(window) = app.get_webview_window("main") {
                     let url: url::Url = "https://www.youtube.com".parse().unwrap();
                     if let Ok(cookies) = window.cookies_for_url(url) {
                         let has_sapisid = cookies.iter().any(|c| c.name() == "SAPISID");
@@ -487,28 +487,15 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_youtube_cookies(app: tauri::AppHandle) -> Result<String, String> {
-    // Get or create the youtube-login window
-    let window = match app.get_webview_window("youtube-login") {
-        Some(w) => w,
-        None => {
-            // Create a hidden window to check cookies
-            WebviewWindowBuilder::new(
-                &app,
-                "youtube-login",
-                tauri::WebviewUrl::External("https://www.youtube.com".parse().unwrap()),
-            )
-            .title("YouTube Login")
-            .inner_size(1000.0, 700.0)
-            .visible(false)
-            .build()
-            .map_err(|e| e.to_string())?
-        }
-    };
-
-    // Wait a bit for cookies to be available
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    // Use youtube-login window if it exists, otherwise use main window
+    // (avoids creating a hidden YouTube page that crashes WebKit on WSL2)
+    let window = app
+        .get_webview_window("youtube-login")
+        .or_else(|| app.get_webview_window("main"))
+        .ok_or("No window available")?;
 
     // Use Tauri's cookies_for_url API to get all cookies including HTTP-only ones
+    // Cookie store is shared across all windows, so any window can be used
     let url: url::Url = "https://www.youtube.com".parse().unwrap();
     let cookies: Vec<Cookie<'_>> = window
         .cookies_for_url(url)
