@@ -159,9 +159,7 @@ function Viewer() {
           <div className="stat-label">高評価数</div>
         </div>
         <div className="stat-item">
-          <div className="stat-value">
-            {(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}
-          </div>
+          <div className="stat-value">{points.subscribers.toLocaleString()}</div>
           <div className="stat-label">新規登録者数</div>
         </div>
         <div className="stat-item">

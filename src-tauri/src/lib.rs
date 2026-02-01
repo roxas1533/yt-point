@@ -255,16 +255,18 @@ async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
             *bonus_given = true;
         }
         calculated.concurrent = if *bonus_given { 1000 } else { 0 };
-        // Recalculate total with concurrent bonus
-        calculated.total = calculated.superchat
-            + calculated.concurrent
-            + calculated.likes
-            + calculated.subscribers;
 
-        // Add manual points and visitor points
+        // Add manual points, visitor points, and subscriber points (all manual)
         let current_points = state.points.read().await;
         calculated.manual = current_points.manual;
         calculated.visitor = current_points.visitor;
+        // 新規登録者は手動入力の値を使用
+        calculated.subscribers = current_points.subscribers;
+
+        // Recalculate total
+        calculated.total = calculated.superchat + calculated.concurrent + calculated.likes;
+        calculated.total +=
+            (current_points.subscribers as f64 / config::POINTS_CONFIG.subscriber_rate) as i64;
         calculated.total +=
             (current_points.manual as f64 * config::POINTS_CONFIG.manual_rate) as i64;
         calculated.total +=
@@ -371,6 +373,43 @@ async fn add_visitor_points(
     };
 
     println!("Added {} visitor points. Total: {}", amount, points.total);
+
+    // Emit event with full payload (points + metrics)
+    let payload = PointsUpdatePayload {
+        points: points.clone(),
+        metrics: metrics.clone(),
+        config: config::POINTS_CONFIG.clone(),
+    };
+    let _ = app.emit("points-update", &payload);
+
+    // Broadcast to web clients
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_subscriber_points(
+    amount: i64,
+    state: State<'_, Arc<AppState>>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let (points, metrics) = {
+        let mut points = state.points.write().await;
+        points.subscribers += amount;
+        points.total += (amount as f64 / config::POINTS_CONFIG.subscriber_rate) as i64;
+        let metrics = state.raw_metrics.read().await;
+        (points.clone(), metrics.clone())
+    };
+
+    println!(
+        "Added {} subscriber points. Total: {}",
+        amount, points.total
+    );
 
     // Emit event with full payload (points + metrics)
     let payload = PointsUpdatePayload {
@@ -600,6 +639,7 @@ pub fn run() {
             stop_monitoring,
             add_manual_points,
             add_visitor_points,
+            add_subscriber_points,
             get_points,
             reset_points,
             open_viewer_window,
