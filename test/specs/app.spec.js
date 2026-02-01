@@ -89,11 +89,11 @@ describe("YT Point Application", () => {
 
   describe("Saitama Bonus Buttons", () => {
     it("should display saitama bonus buttons", async () => {
-      // There are +1 and -1 buttons for both saitama bonus and visitor
+      // There are +1 and -1 buttons for subscriber, saitama bonus and visitor
       const plusButtons = await $$("button=+1");
       const minusButtons = await $$("button=-1");
-      expect(plusButtons.length).toBeGreaterThanOrEqual(2);
-      expect(minusButtons.length).toBeGreaterThanOrEqual(2);
+      expect(plusButtons.length).toBeGreaterThanOrEqual(3);
+      expect(minusButtons.length).toBeGreaterThanOrEqual(3);
     });
 
     it("should update points when clicking +1 button", async () => {
@@ -105,9 +105,9 @@ describe("YT Point Application", () => {
       const initialText = await totalPoints.getText();
       const initialValue = parseInt(initialText.replace(" 円", ""));
 
-      // Click first +1 button (saitama bonus)
+      // Click second +1 button (saitama bonus - first is subscriber)
       const buttons = await $$("button=+1");
-      await buttons[0].click();
+      await buttons[1].click();
 
       // Wait a bit for the event to propagate
       await browser.pause(500);
@@ -129,9 +129,9 @@ describe("YT Point Application", () => {
       const initialText = await totalPoints.getText();
       const initialValue = parseInt(initialText.replace(" 円", ""));
 
-      // Click first -1 button (saitama bonus)
+      // Click second -1 button (saitama bonus - first is subscriber)
       const buttons = await $$("button=-1");
-      await buttons[0].click();
+      await buttons[1].click();
 
       // Wait a bit for the event to propagate
       await browser.pause(500);
@@ -149,13 +149,13 @@ describe("YT Point Application", () => {
   });
 
   describe("Layout", () => {
-    it("should have five sections", async () => {
+    it("should have six sections", async () => {
       const sections = await $$(".section");
-      expect(sections.length).toBe(5);
+      expect(sections.length).toBe(6);
     });
 
     it("should have section headers", async () => {
-      const headers = ["配信設定", "現在の金額", "埼玉ボーナス追加", "ライバー訪問追加"];
+      const headers = ["配信設定", "現在の金額", "新規登録者追加", "埼玉ボーナス追加", "ライバー訪問追加"];
 
       for (const header of headers) {
         const h2 = await $(`h2=${header}`);

@@ -146,6 +146,15 @@ function App() {
     }
   };
 
+  const addSubscriberPoints = async (amount: number) => {
+    try {
+      await invoke("add_subscriber_points", { amount });
+      // State will be updated by the points-update event listener
+    } catch (e) {
+      console.error("Failed to add subscriber points:", e);
+    }
+  };
+
   const openViewerWindow = async () => {
     try {
       await invoke("open_viewer_window");
@@ -359,9 +368,7 @@ function App() {
               <div className="point-details">
                 <div className="detail-row">
                   <span className="detail-label">値</span>
-                  <span className="detail-value">
-                    {(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}人
-                  </span>
+                  <span className="detail-value">{points.subscribers.toLocaleString()}人</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">レート</span>
@@ -370,7 +377,7 @@ function App() {
                 <div className="detail-row">
                   <span className="detail-label">金額</span>
                   <span className="detail-value result">
-                    {points.subscribers.toLocaleString()}円
+                    {(points.subscribers * 50).toLocaleString()}円
                   </span>
                 </div>
               </div>
@@ -415,6 +422,18 @@ function App() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="section">
+        <h2>新規登録者追加</h2>
+        <div className="button-group">
+          <button type="button" onClick={() => addSubscriberPoints(1)}>
+            +1
+          </button>
+          <button type="button" onClick={() => addSubscriberPoints(-1)}>
+            -1
+          </button>
+        </div>
       </div>
 
       <div className="section">
