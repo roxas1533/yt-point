@@ -232,14 +232,26 @@
   }
 
   .point-item .label {
-    @apply text-sm text-muted mb-1;
+    @apply text-sm text-muted mb-2 font-medium border-b border-white/10 pb-1;
   }
 
-  .point-item .value {
-    @apply text-xl font-semibold;
+  .point-details {
+    @apply flex flex-col gap-1;
   }
 
-  .point-item .raw {
-    @apply text-xs text-muted mt-1;
+  .detail-row {
+    @apply flex justify-between items-center py-1;
+  }
+
+  .detail-label {
+    @apply text-xs text-muted;
+  }
+
+  .detail-value {
+    @apply text-sm font-medium;
+  }
+
+  .detail-value.result {
+    @apply text-base font-bold text-yellow-400;
   }
 }

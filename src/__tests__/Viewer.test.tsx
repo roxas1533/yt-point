@@ -27,6 +27,7 @@ describe("Viewer", () => {
       likes: 0,
       subscribers: 0,
       manual: 0,
+      visitor: 0,
     });
   });
 
@@ -35,7 +36,7 @@ describe("Viewer", () => {
       await act(async () => {
         render(<Viewer />);
       });
-      expect(screen.getByText("LIVE POINTS")).toBeInTheDocument();
+      expect(screen.getByText("合計")).toBeInTheDocument();
     });
 
     it("renders initial score as 0", async () => {
@@ -50,18 +51,20 @@ describe("Viewer", () => {
       await act(async () => {
         render(<Viewer />);
       });
-      expect(screen.getByText("Progress")).toBeInTheDocument();
-      expect(screen.getByText("0 / 1,000")).toBeInTheDocument();
+      expect(screen.getByText("進捗")).toBeInTheDocument();
+      expect(screen.getByText("0 / 5,000")).toBeInTheDocument();
     });
 
     it("renders all stat categories", async () => {
       await act(async () => {
         render(<Viewer />);
       });
-      expect(screen.getByText("Superchat")).toBeInTheDocument();
-      expect(screen.getByText("Viewers")).toBeInTheDocument();
-      expect(screen.getByText("Likes")).toBeInTheDocument();
-      expect(screen.getByText("New Subs")).toBeInTheDocument();
+      expect(screen.getByText("スーパーチャット")).toBeInTheDocument();
+      expect(screen.getByText("同時視聴者数")).toBeInTheDocument();
+      expect(screen.getByText("高評価数")).toBeInTheDocument();
+      expect(screen.getByText("新規登録者数")).toBeInTheDocument();
+      expect(screen.getByText("埼玉ボーナス")).toBeInTheDocument();
+      expect(screen.getByText("ライバー訪問")).toBeInTheDocument();
     });
   });
 
@@ -88,6 +91,7 @@ describe("Viewer", () => {
         likes: 150,
         subscribers: 50,
         manual: 0,
+        visitor: 0,
       });
 
       const { container } = await act(async () => {
@@ -128,6 +132,7 @@ describe("Viewer", () => {
               likes: 15,
               subscribers: 5,
               manual: 0,
+              visitor: 0,
             },
             metrics: {
               superchat_amount: 5000,
@@ -173,6 +178,7 @@ describe("Viewer", () => {
               likes: 0,
               subscribers: 0,
               manual: 5,
+              visitor: 0,
             },
             metrics: {
               superchat_amount: 0,
@@ -198,6 +204,7 @@ describe("Viewer", () => {
         likes: 0,
         subscribers: 0,
         manual: 100,
+        visitor: 0,
       });
 
       let eventCallback: ((event: { payload: unknown }) => void) | null = null;
@@ -226,6 +233,7 @@ describe("Viewer", () => {
               likes: 0,
               subscribers: 0,
               manual: 50,
+              visitor: 0,
             },
             metrics: {
               superchat_amount: 0,
@@ -267,6 +275,7 @@ describe("Viewer", () => {
               likes: 0,
               subscribers: 0,
               manual: 0,
+              visitor: 0,
             },
             metrics: {
               superchat_amount: 5000,
@@ -306,6 +315,7 @@ describe("Viewer", () => {
               likes: 0,
               subscribers: 0,
               manual: 5,
+              visitor: 0,
             },
             metrics: {
               superchat_amount: 0,
@@ -326,12 +336,13 @@ describe("Viewer", () => {
   describe("progress bar", () => {
     it("updates progress bar width based on points", async () => {
       mockInvoke.mockResolvedValue({
-        total: 500,
+        total: 2500,
         superchat: 0,
         concurrent: 0,
         likes: 0,
         subscribers: 0,
-        manual: 500,
+        manual: 2500,
+        visitor: 0,
       });
 
       const { container } = await act(async () => {
@@ -348,12 +359,13 @@ describe("Viewer", () => {
 
     it("caps progress bar at 100%", async () => {
       mockInvoke.mockResolvedValue({
-        total: 1500,
+        total: 6000,
         superchat: 0,
         concurrent: 0,
         likes: 0,
         subscribers: 0,
-        manual: 1500,
+        manual: 6000,
+        visitor: 0,
       });
 
       const { container } = await act(async () => {
