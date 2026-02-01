@@ -52,7 +52,7 @@ describe("App", () => {
         container = result.container;
       });
       const totalPoints = container?.querySelector(".total-points");
-      expect(totalPoints).toHaveTextContent("0 pt");
+      expect(totalPoints).toHaveTextContent("0 円");
     });
 
     it("renders all point categories", async () => {
@@ -63,18 +63,18 @@ describe("App", () => {
       expect(screen.getByText("同時接続者数")).toBeInTheDocument();
       expect(screen.getByText("高評価")).toBeInTheDocument();
       expect(screen.getByText("新規登録者")).toBeInTheDocument();
-      expect(screen.getByText("手動追加")).toBeInTheDocument();
+      expect(screen.getByText("埼玉ボーナス")).toBeInTheDocument();
+      expect(screen.getByText("ライバー訪問")).toBeInTheDocument();
     });
 
-    it("renders manual point buttons", async () => {
+    it("renders saitama bonus buttons", async () => {
       await act(async () => {
         render(<App />);
       });
-      expect(screen.getByRole("button", { name: "+1" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "+5" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "+10" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "+50" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "+100" })).toBeInTheDocument();
+      const buttons = screen.getAllByRole("button", { name: "+1" });
+      expect(buttons.length).toBeGreaterThanOrEqual(1);
+      const minusButtons = screen.getAllByRole("button", { name: "-1" });
+      expect(minusButtons.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -193,14 +193,14 @@ describe("App", () => {
     });
   });
 
-  describe("manual point buttons", () => {
-    it("calls add_manual_points with correct amount for +1", async () => {
+  describe("saitama bonus buttons", () => {
+    it("calls add_manual_points with amount 1 for +1", async () => {
       await act(async () => {
         render(<App />);
       });
-      const button = screen.getByRole("button", { name: "+1" });
+      const buttons = screen.getAllByRole("button", { name: "+1" });
       await act(async () => {
-        fireEvent.click(button);
+        fireEvent.click(buttons[0]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
@@ -208,59 +208,47 @@ describe("App", () => {
       });
     });
 
-    it("calls add_manual_points with correct amount for +5", async () => {
+    it("calls add_manual_points with amount -1 for -1", async () => {
       await act(async () => {
         render(<App />);
       });
-      const button = screen.getByRole("button", { name: "+5" });
+      const buttons = screen.getAllByRole("button", { name: "-1" });
       await act(async () => {
-        fireEvent.click(button);
+        fireEvent.click(buttons[0]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
-        amount: 5,
+        amount: -1,
+      });
+    });
+  });
+
+  describe("visitor buttons", () => {
+    it("calls add_visitor_points with amount 1 for +1", async () => {
+      await act(async () => {
+        render(<App />);
+      });
+      const buttons = screen.getAllByRole("button", { name: "+1" });
+      await act(async () => {
+        fireEvent.click(buttons[1]);
+      });
+
+      expect(mockInvoke).toHaveBeenCalledWith("add_visitor_points", {
+        amount: 1,
       });
     });
 
-    it("calls add_manual_points with correct amount for +10", async () => {
+    it("calls add_visitor_points with amount -1 for -1", async () => {
       await act(async () => {
         render(<App />);
       });
-      const button = screen.getByRole("button", { name: "+10" });
+      const buttons = screen.getAllByRole("button", { name: "-1" });
       await act(async () => {
-        fireEvent.click(button);
+        fireEvent.click(buttons[1]);
       });
 
-      expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
-        amount: 10,
-      });
-    });
-
-    it("calls add_manual_points with correct amount for +50", async () => {
-      await act(async () => {
-        render(<App />);
-      });
-      const button = screen.getByRole("button", { name: "+50" });
-      await act(async () => {
-        fireEvent.click(button);
-      });
-
-      expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
-        amount: 50,
-      });
-    });
-
-    it("calls add_manual_points with correct amount for +100", async () => {
-      await act(async () => {
-        render(<App />);
-      });
-      const button = screen.getByRole("button", { name: "+100" });
-      await act(async () => {
-        fireEvent.click(button);
-      });
-
-      expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
-        amount: 100,
+      expect(mockInvoke).toHaveBeenCalledWith("add_visitor_points", {
+        amount: -1,
       });
     });
   });

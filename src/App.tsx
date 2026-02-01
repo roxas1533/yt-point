@@ -12,6 +12,7 @@ interface PointState {
   likes: number;
   subscribers: number;
   manual: number;
+  visitor: number;
 }
 
 interface RawMetrics {
@@ -22,9 +23,19 @@ interface RawMetrics {
   current_subscribers: number;
 }
 
+interface PointsConfig {
+  superchat_rate: number;
+  concurrent_rate: number;
+  like_rate: number;
+  subscriber_rate: number;
+  manual_rate: number;
+  visitor_rate: number;
+}
+
 interface PointsUpdatePayload {
   points: PointState;
   metrics: RawMetrics;
+  config: PointsConfig;
 }
 
 function App() {
@@ -41,6 +52,7 @@ function App() {
     likes: 0,
     subscribers: 0,
     manual: 0,
+    visitor: 0,
   });
   const [metrics, setMetrics] = useState<RawMetrics>({
     superchat_amount: 0,
@@ -49,11 +61,20 @@ function App() {
     initial_subscribers: 0,
     current_subscribers: 0,
   });
+  const [config, setConfig] = useState<PointsConfig>({
+    superchat_rate: 1,
+    concurrent_rate: 1,
+    like_rate: 1,
+    subscriber_rate: 1,
+    manual_rate: 1,
+    visitor_rate: 1,
+  });
 
   useEffect(() => {
     const unlistenPoints = listen<PointsUpdatePayload>("points-update", (event) => {
       setPoints(event.payload.points);
       setMetrics(event.payload.metrics);
+      setConfig(event.payload.config);
     });
 
     const unlistenCookies = listen<string>("youtube-cookies", (event) => {
@@ -113,6 +134,15 @@ function App() {
       // State will be updated by the points-update event listener
     } catch (e) {
       console.error("Failed to add points:", e);
+    }
+  };
+
+  const addVisitorPoints = async (amount: number) => {
+    try {
+      await invoke("add_visitor_points", { amount });
+      // State will be updated by the points-update event listener
+    } catch (e) {
+      console.error("Failed to add visitor points:", e);
     }
   };
 
@@ -247,12 +277,12 @@ function App() {
       </div>
 
       <div className="section">
-        <h2>現在のポイント</h2>
+        <h2>現在の金額</h2>
         <div className="points-display">
           {isLoading ? (
             <Skeleton className="h-16 w-48" />
           ) : (
-            <div className="total-points">{points.total} pt</div>
+            <div className="total-points">{points.total} 円</div>
           )}
         </div>
         {isLoading ? (
@@ -269,52 +299,150 @@ function App() {
           <div className="points-breakdown">
             <div className="point-item">
               <span className="label">スーパーチャット</span>
-              <span className="value">{points.superchat} pt</span>
-              <span className="raw">({metrics.superchat_amount.toLocaleString()}円)</span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">
+                    {metrics.superchat_amount.toLocaleString()}円
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">10%</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">{points.superchat.toLocaleString()}円</span>
+                </div>
+              </div>
             </div>
             <div className="point-item">
               <span className="label">同時接続者数</span>
-              <span className="value">{points.concurrent} pt</span>
-              <span className="raw">({metrics.concurrent_viewers.toLocaleString()}人)</span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">
+                    {metrics.concurrent_viewers.toLocaleString()}人
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">50人超で1000円</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">
+                    {points.concurrent.toLocaleString()}円
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="point-item">
               <span className="label">高評価</span>
-              <span className="value">{points.likes} pt</span>
-              <span className="raw">({metrics.like_count.toLocaleString()}件)</span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">{metrics.like_count.toLocaleString()}件</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">1件10円</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">{points.likes.toLocaleString()}円</span>
+                </div>
+              </div>
             </div>
             <div className="point-item">
               <span className="label">新規登録者</span>
-              <span className="value">{points.subscribers} pt</span>
-              <span className="raw">
-                (+{(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}人)
-              </span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">
+                    {(metrics.current_subscribers - metrics.initial_subscribers).toLocaleString()}人
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">1人50円</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">
+                    {points.subscribers.toLocaleString()}円
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="point-item">
-              <span className="label">手動追加</span>
-              <span className="value">{points.manual} pt</span>
+              <span className="label">埼玉ボーナス</span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">{points.manual.toLocaleString()}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">1回{config.manual_rate}円</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">
+                    {(points.manual * config.manual_rate).toLocaleString()}円
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="point-item">
+              <span className="label">ライバー訪問</span>
+              <div className="point-details">
+                <div className="detail-row">
+                  <span className="detail-label">値</span>
+                  <span className="detail-value">{points.visitor.toLocaleString()}人</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">レート</span>
+                  <span className="detail-value">1人{config.visitor_rate}円</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">金額</span>
+                  <span className="detail-value result">
+                    {(points.visitor * config.visitor_rate).toLocaleString()}円
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
 
       <div className="section">
-        <h2>手動ポイント追加</h2>
+        <h2>埼玉ボーナス追加</h2>
         <div className="button-group">
           <button type="button" onClick={() => addManualPoints(1)}>
             +1
           </button>
-          <button type="button" onClick={() => addManualPoints(5)}>
-            +5
+          <button type="button" onClick={() => addManualPoints(-1)}>
+            -1
           </button>
-          <button type="button" onClick={() => addManualPoints(10)}>
-            +10
+        </div>
+      </div>
+
+      <div className="section">
+        <h2>ライバー訪問追加</h2>
+        <div className="button-group">
+          <button type="button" onClick={() => addVisitorPoints(1)}>
+            +1
           </button>
-          <button type="button" onClick={() => addManualPoints(50)}>
-            +50
+          <button type="button" onClick={() => addVisitorPoints(-1)}>
+            -1
           </button>
-          <button type="button" onClick={() => addManualPoints(100)}>
-            +100
-          </button>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="button-group">
           <button type="button" className="reset-button" onClick={resetPoints} disabled={isLoading}>
             リセット
           </button>

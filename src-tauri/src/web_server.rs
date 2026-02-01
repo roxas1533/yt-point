@@ -10,12 +10,14 @@ use tokio::sync::broadcast;
 use tokio_stream::{StreamExt, wrappers::BroadcastStream};
 use tower_http::cors::CorsLayer;
 
+use crate::config::PointsConfig;
 use crate::points::{PointState, RawMetrics};
 
 #[derive(Clone, serde::Serialize)]
 pub struct PointsPayload {
     pub points: PointState,
     pub metrics: RawMetrics,
+    pub config: PointsConfig,
 }
 
 pub struct WebServer {
@@ -122,7 +124,7 @@ body {
   display: inline-block;
 }
 .score::after {
-  content: 'PT';
+  content: '円';
   font-size: 20px;
   position: absolute;
   bottom: 10px;

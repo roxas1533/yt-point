@@ -21,6 +21,7 @@ pub struct AppState {
     pub is_authenticated: RwLock<bool>,
     pub web_broadcast: broadcast::Sender<PointsPayload>,
     pub server_url: RwLock<Option<String>>,
+    pub concurrent_bonus_given: RwLock<bool>,
 }
 
 #[tauri::command]
@@ -239,6 +240,7 @@ async fn update_metrics(state: &Arc<AppState>) -> Result<(), String> {
 struct PointsUpdatePayload {
     points: points::PointState,
     metrics: points::RawMetrics,
+    config: config::PointsConfig,
 }
 
 async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
@@ -247,10 +249,26 @@ async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
         let mut calculated =
             points::PointState::calculate_from_metrics(&metrics, &config::POINTS_CONFIG);
 
-        // Add manual points
+        // Check concurrent bonus (50人超えたら1回だけ1000円)
+        let mut bonus_given = state.concurrent_bonus_given.write().await;
+        if metrics.concurrent_viewers > 50 && !*bonus_given {
+            *bonus_given = true;
+        }
+        calculated.concurrent = if *bonus_given { 1000 } else { 0 };
+        // Recalculate total with concurrent bonus
+        calculated.total = calculated.superchat
+            + calculated.concurrent
+            + calculated.likes
+            + calculated.subscribers;
+
+        // Add manual points and visitor points
         let current_points = state.points.read().await;
         calculated.manual = current_points.manual;
-        calculated.total += current_points.manual;
+        calculated.visitor = current_points.visitor;
+        calculated.total +=
+            (current_points.manual as f64 * config::POINTS_CONFIG.manual_rate) as i64;
+        calculated.total +=
+            (current_points.visitor as f64 * config::POINTS_CONFIG.visitor_rate) as i64;
 
         // Update stored points
         drop(current_points);
@@ -263,11 +281,16 @@ async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
     let payload = PointsUpdatePayload {
         points: points.clone(),
         metrics: metrics.clone(),
+        config: config::POINTS_CONFIG.clone(),
     };
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 }
 
 #[tauri::command]
@@ -308,7 +331,7 @@ async fn add_manual_points(
     let (points, metrics) = {
         let mut points = state.points.write().await;
         points.manual += amount;
-        points.total += amount;
+        points.total += (amount as f64 * config::POINTS_CONFIG.manual_rate) as i64;
         let metrics = state.raw_metrics.read().await;
         (points.clone(), metrics.clone())
     };
@@ -319,11 +342,50 @@ async fn add_manual_points(
     let payload = PointsUpdatePayload {
         points: points.clone(),
         metrics: metrics.clone(),
+        config: config::POINTS_CONFIG.clone(),
     };
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_visitor_points(
+    amount: i64,
+    state: State<'_, Arc<AppState>>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let (points, metrics) = {
+        let mut points = state.points.write().await;
+        points.visitor += amount;
+        points.total += (amount as f64 * config::POINTS_CONFIG.visitor_rate) as i64;
+        let metrics = state.raw_metrics.read().await;
+        (points.clone(), metrics.clone())
+    };
+
+    println!("Added {} visitor points. Total: {}", amount, points.total);
+
+    // Emit event with full payload (points + metrics)
+    let payload = PointsUpdatePayload {
+        points: points.clone(),
+        metrics: metrics.clone(),
+        config: config::POINTS_CONFIG.clone(),
+    };
+    let _ = app.emit("points-update", &payload);
+
+    // Broadcast to web clients
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 
     Ok(())
 }
@@ -356,6 +418,12 @@ async fn reset_points(
         };
     }
 
+    // Reset concurrent bonus flag
+    {
+        let mut bonus_given = state.concurrent_bonus_given.write().await;
+        *bonus_given = false;
+    }
+
     let points = state.points.read().await.clone();
     let metrics = state.raw_metrics.read().await.clone();
     println!("Points reset");
@@ -363,11 +431,16 @@ async fn reset_points(
     let payload = PointsUpdatePayload {
         points: points.clone(),
         metrics: metrics.clone(),
+        config: config::POINTS_CONFIG.clone(),
     };
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 
     Ok(())
 }
@@ -380,7 +453,7 @@ async fn open_viewer_window(app: tauri::AppHandle) -> Result<(), String> {
         tauri::WebviewUrl::App("/viewer.html".into()),
     )
     .title("YT Point - 視聴者用表示")
-    .inner_size(450.0, 520.0)
+    .inner_size(800.0, 350.0)
     .transparent(true)
     .decorations(true)
     .always_on_top(true)
@@ -416,8 +489,8 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
         if let tauri::WindowEvent::CloseRequested { .. } = event {
             let app = app_handle.clone();
             tauri::async_runtime::spawn(async move {
-                // Get cookies before window is destroyed
-                if let Some(window) = app.get_webview_window("youtube-login") {
+                // Use main window to check cookies (cookie store is shared across windows)
+                if let Some(window) = app.get_webview_window("main") {
                     let url: url::Url = "https://www.youtube.com".parse().unwrap();
                     if let Ok(cookies) = window.cookies_for_url(url) {
                         let has_sapisid = cookies.iter().any(|c| c.name() == "SAPISID");
@@ -435,28 +508,15 @@ async fn open_youtube_login(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_youtube_cookies(app: tauri::AppHandle) -> Result<String, String> {
-    // Get or create the youtube-login window
-    let window = match app.get_webview_window("youtube-login") {
-        Some(w) => w,
-        None => {
-            // Create a hidden window to check cookies
-            WebviewWindowBuilder::new(
-                &app,
-                "youtube-login",
-                tauri::WebviewUrl::External("https://www.youtube.com".parse().unwrap()),
-            )
-            .title("YouTube Login")
-            .inner_size(1000.0, 700.0)
-            .visible(false)
-            .build()
-            .map_err(|e| e.to_string())?
-        }
-    };
-
-    // Wait a bit for cookies to be available
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    // Use youtube-login window if it exists, otherwise use main window
+    // (avoids creating a hidden YouTube page that crashes WebKit on WSL2)
+    let window = app
+        .get_webview_window("youtube-login")
+        .or_else(|| app.get_webview_window("main"))
+        .ok_or("No window available")?;
 
     // Use Tauri's cookies_for_url API to get all cookies including HTTP-only ones
+    // Cookie store is shared across all windows, so any window can be used
     let url: url::Url = "https://www.youtube.com".parse().unwrap();
     let cookies: Vec<Cookie<'_>> = window
         .cookies_for_url(url)
@@ -507,6 +567,7 @@ pub fn run() {
         is_authenticated: RwLock::new(false),
         web_broadcast: web_tx.clone(),
         server_url: RwLock::new(None),
+        concurrent_bonus_given: RwLock::new(false),
     });
 
     let app_state_clone = app_state.clone();
@@ -538,6 +599,7 @@ pub fn run() {
             start_monitoring,
             stop_monitoring,
             add_manual_points,
+            add_visitor_points,
             get_points,
             reset_points,
             open_viewer_window,

@@ -65,7 +65,7 @@ describe("YT Point Application", () => {
     });
 
     it("should display the viewer window button", async () => {
-      const viewerButton = await $("button=視聴者用ウィンドウを開く");
+      const viewerButton = await $("button.viewer-button");
       await expect(viewerButton).toBeDisplayed();
     });
   });
@@ -74,11 +74,11 @@ describe("YT Point Application", () => {
     it("should display initial total points as 0", async () => {
       const totalPoints = await $(".total-points");
       await expect(totalPoints).toBeDisplayed();
-      await expect(totalPoints).toHaveText("0 pt");
+      await expect(totalPoints).toHaveText("0 円");
     });
 
     it("should display all point categories", async () => {
-      const categories = ["スーパーチャット", "同時接続者数", "高評価", "新規登録者", "手動追加"];
+      const categories = ["スーパーチャット", "同時接続者数", "高評価", "新規登録者", "埼玉ボーナス", "ライバー訪問"];
 
       for (const category of categories) {
         const label = await $(`span.label=${category}`);
@@ -87,14 +87,13 @@ describe("YT Point Application", () => {
     });
   });
 
-  describe("Manual Point Buttons", () => {
-    it("should display all manual point buttons", async () => {
-      const amounts = ["+1", "+5", "+10", "+50", "+100"];
-
-      for (const amount of amounts) {
-        const button = await $(`button=${amount}`);
-        await expect(button).toBeDisplayed();
-      }
+  describe("Saitama Bonus Buttons", () => {
+    it("should display saitama bonus buttons", async () => {
+      // There are +1 and -1 buttons for both saitama bonus and visitor
+      const plusButtons = await $$("button=+1");
+      const minusButtons = await $$("button=-1");
+      expect(plusButtons.length).toBeGreaterThanOrEqual(2);
+      expect(minusButtons.length).toBeGreaterThanOrEqual(2);
     });
 
     it("should update points when clicking +1 button", async () => {
@@ -104,11 +103,11 @@ describe("YT Point Application", () => {
 
       // Get initial value
       const initialText = await totalPoints.getText();
-      const initialValue = parseInt(initialText.replace(" pt", ""));
+      const initialValue = parseInt(initialText.replace(" 円", ""));
 
-      // Click button
-      const button = await $("button=+1");
-      await button.click();
+      // Click first +1 button (saitama bonus)
+      const buttons = await $$("button=+1");
+      await buttons[0].click();
 
       // Wait a bit for the event to propagate
       await browser.pause(500);
@@ -117,46 +116,46 @@ describe("YT Point Application", () => {
       await browser.waitUntil(
         async () => {
           const newText = await (await $(".total-points")).getText();
-          const newValue = parseInt(newText.replace(" pt", ""));
-          return newValue === initialValue + 1;
+          const newValue = parseInt(newText.replace(" 円", ""));
+          return newValue === initialValue + 100;
         },
-        { timeout: 5000, interval: 200, timeoutMsg: "Points did not increase after clicking +1" }
+        { timeout: 5000, interval: 200, timeoutMsg: "Points did not increase after clicking +100" }
       );
     });
 
-    it("should update points when clicking +10 button", async () => {
+    it("should update points when clicking -1 button", async () => {
       // Get initial value
       const totalPoints = await $(".total-points");
       const initialText = await totalPoints.getText();
-      const initialValue = parseInt(initialText.replace(" pt", ""));
+      const initialValue = parseInt(initialText.replace(" 円", ""));
 
-      // Click button
-      const button = await $("button=+10");
-      await button.click();
+      // Click first -1 button (saitama bonus)
+      const buttons = await $$("button=-1");
+      await buttons[0].click();
 
       // Wait a bit for the event to propagate
       await browser.pause(500);
 
-      // Verify points increased
+      // Verify points decreased
       await browser.waitUntil(
         async () => {
           const newText = await (await $(".total-points")).getText();
-          const newValue = parseInt(newText.replace(" pt", ""));
-          return newValue === initialValue + 10;
+          const newValue = parseInt(newText.replace(" 円", ""));
+          return newValue === initialValue - 100;
         },
-        { timeout: 5000, interval: 200, timeoutMsg: `Points did not increase after clicking +10` }
+        { timeout: 5000, interval: 200, timeoutMsg: "Points did not decrease after clicking -100" }
       );
     });
   });
 
   describe("Layout", () => {
-    it("should have three sections", async () => {
+    it("should have five sections", async () => {
       const sections = await $$(".section");
-      expect(sections.length).toBe(3);
+      expect(sections.length).toBe(5);
     });
 
     it("should have section headers", async () => {
-      const headers = ["配信設定", "現在のポイント", "手動ポイント追加"];
+      const headers = ["配信設定", "現在の金額", "埼玉ボーナス追加", "ライバー訪問追加"];
 
       for (const header of headers) {
         const h2 = await $(`h2=${header}`);
@@ -167,6 +166,8 @@ describe("YT Point Application", () => {
 
   describe("Screenshots", () => {
     it("should capture full page screenshot", async () => {
+      // Set window size to capture full content
+      await browser.setWindowSize(1280, 1050);
       // Wait for page to fully render
       await browser.pause(500);
 
@@ -182,16 +183,7 @@ describe("YT Point Application", () => {
       mainWindow = await browser.getWindowHandle();
 
       // Find and click the viewer window button
-      const buttons = await $$("button");
-      let viewerButton;
-      for (const btn of buttons) {
-        const text = await btn.getText();
-        if (text === "視聴者用ウィンドウを開く") {
-          viewerButton = btn;
-          break;
-        }
-      }
-
+      const viewerButton = await $("button.viewer-button");
       await viewerButton.click();
 
       // Wait for new window to open
@@ -215,18 +207,18 @@ describe("YT Point Application", () => {
       const title = await browser.getTitle();
       expect(title).toBe("YT Point - Viewer");
 
-      // Verify LIVE POINTS header
+      // Verify header
       const header = await $(".title");
       await expect(header).toBeDisplayed();
-      await expect(header).toHaveText("LIVE POINTS");
+      await expect(header).toHaveText("合計");
 
       // Verify score display
       const score = await $(".score");
       await expect(score).toBeDisplayed();
 
-      // Verify stats
+      // Verify stats (6 items: superchat, viewers, likes, new subs, saitama bonus, visitor)
       const statValues = await $$(".stat-value");
-      expect(statValues.length).toBe(4);
+      expect(statValues.length).toBe(6);
       for (const stat of statValues) {
         await expect(stat).toBeDisplayed();
       }
@@ -239,7 +231,7 @@ describe("YT Point Application", () => {
       await browser.switchToWindow(viewerHandle);
 
       // Set window size to capture full content
-      await browser.setWindowSize(500, 600);
+      await browser.setWindowSize(850, 500);
       await browser.pause(500);
       await browser.saveScreenshot("./test/screenshots/viewer-window.png");
     });
@@ -253,8 +245,8 @@ describe("YT Point Application", () => {
     it("should sync points to viewer window when adding", async () => {
       // Add points on main window
       await browser.switchToWindow(mainWindow);
-      const addButton = await $("button=+100");
-      await addButton.click();
+      const addButtons = await $$("button=+1");
+      await addButtons[0].click();
       await browser.pause(500);
 
       // Check viewer window
@@ -284,7 +276,7 @@ describe("YT Point Application", () => {
         async () => {
           const mainTotal = await $(".total-points");
           const text = await mainTotal.getText();
-          return text === "0 pt";
+          return text === "0 円";
         },
         { timeout: 5000, timeoutMsg: "Main window did not reset to 0" }
       );
