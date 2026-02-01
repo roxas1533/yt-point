@@ -32,6 +32,7 @@
 
             # bun (Node.js互換ランタイム)
             bun
+            nodejs
 
             # 高速リンカー
             mold

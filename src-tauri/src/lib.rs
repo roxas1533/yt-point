@@ -256,14 +256,19 @@ async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
         }
         calculated.concurrent = if *bonus_given { 1000 } else { 0 };
         // Recalculate total with concurrent bonus
-        calculated.total = calculated.superchat + calculated.concurrent + calculated.likes + calculated.subscribers;
+        calculated.total = calculated.superchat
+            + calculated.concurrent
+            + calculated.likes
+            + calculated.subscribers;
 
         // Add manual points and visitor points
         let current_points = state.points.read().await;
         calculated.manual = current_points.manual;
         calculated.visitor = current_points.visitor;
-        calculated.total += (current_points.manual as f64 * config::POINTS_CONFIG.manual_rate) as i64;
-        calculated.total += (current_points.visitor as f64 * config::POINTS_CONFIG.visitor_rate) as i64;
+        calculated.total +=
+            (current_points.manual as f64 * config::POINTS_CONFIG.manual_rate) as i64;
+        calculated.total +=
+            (current_points.visitor as f64 * config::POINTS_CONFIG.visitor_rate) as i64;
 
         // Update stored points
         drop(current_points);
@@ -281,7 +286,11 @@ async fn emit_points(state: &Arc<AppState>, app: &tauri::AppHandle) {
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics, config: config::POINTS_CONFIG.clone() });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 }
 
 #[tauri::command]
@@ -338,7 +347,11 @@ async fn add_manual_points(
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics, config: config::POINTS_CONFIG.clone() });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 
     Ok(())
 }
@@ -368,7 +381,11 @@ async fn add_visitor_points(
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics, config: config::POINTS_CONFIG.clone() });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 
     Ok(())
 }
@@ -419,7 +436,11 @@ async fn reset_points(
     let _ = app.emit("points-update", &payload);
 
     // Broadcast to web clients
-    let _ = state.web_broadcast.send(PointsPayload { points, metrics, config: config::POINTS_CONFIG.clone() });
+    let _ = state.web_broadcast.send(PointsPayload {
+        points,
+        metrics,
+        config: config::POINTS_CONFIG.clone(),
+    });
 
     Ok(())
 }

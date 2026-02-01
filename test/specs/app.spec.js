@@ -117,9 +117,9 @@ describe("YT Point Application", () => {
         async () => {
           const newText = await (await $(".total-points")).getText();
           const newValue = parseInt(newText.replace(" 円", ""));
-          return newValue === initialValue + 1;
+          return newValue === initialValue + 100;
         },
-        { timeout: 5000, interval: 200, timeoutMsg: "Points did not increase after clicking +1" }
+        { timeout: 5000, interval: 200, timeoutMsg: "Points did not increase after clicking +100" }
       );
     });
 
@@ -141,9 +141,9 @@ describe("YT Point Application", () => {
         async () => {
           const newText = await (await $(".total-points")).getText();
           const newValue = parseInt(newText.replace(" 円", ""));
-          return newValue === initialValue - 1;
+          return newValue === initialValue - 100;
         },
-        { timeout: 5000, interval: 200, timeoutMsg: "Points did not decrease after clicking -1" }
+        { timeout: 5000, interval: 200, timeoutMsg: "Points did not decrease after clicking -100" }
       );
     });
   });
