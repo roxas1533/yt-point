@@ -193,6 +193,36 @@ describe("App", () => {
     });
   });
 
+  describe("subscriber buttons", () => {
+    it("calls add_subscriber_points with amount 1 for +1", async () => {
+      await act(async () => {
+        render(<App />);
+      });
+      const buttons = screen.getAllByRole("button", { name: "+1" });
+      await act(async () => {
+        fireEvent.click(buttons[0]);
+      });
+
+      expect(mockInvoke).toHaveBeenCalledWith("add_subscriber_points", {
+        amount: 1,
+      });
+    });
+
+    it("calls add_subscriber_points with amount -1 for -1", async () => {
+      await act(async () => {
+        render(<App />);
+      });
+      const buttons = screen.getAllByRole("button", { name: "-1" });
+      await act(async () => {
+        fireEvent.click(buttons[0]);
+      });
+
+      expect(mockInvoke).toHaveBeenCalledWith("add_subscriber_points", {
+        amount: -1,
+      });
+    });
+  });
+
   describe("saitama bonus buttons", () => {
     it("calls add_manual_points with amount 1 for +1", async () => {
       await act(async () => {
@@ -200,7 +230,7 @@ describe("App", () => {
       });
       const buttons = screen.getAllByRole("button", { name: "+1" });
       await act(async () => {
-        fireEvent.click(buttons[0]);
+        fireEvent.click(buttons[1]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
@@ -214,7 +244,7 @@ describe("App", () => {
       });
       const buttons = screen.getAllByRole("button", { name: "-1" });
       await act(async () => {
-        fireEvent.click(buttons[0]);
+        fireEvent.click(buttons[1]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_manual_points", {
@@ -230,7 +260,7 @@ describe("App", () => {
       });
       const buttons = screen.getAllByRole("button", { name: "+1" });
       await act(async () => {
-        fireEvent.click(buttons[1]);
+        fireEvent.click(buttons[2]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_visitor_points", {
@@ -244,7 +274,7 @@ describe("App", () => {
       });
       const buttons = screen.getAllByRole("button", { name: "-1" });
       await act(async () => {
-        fireEvent.click(buttons[1]);
+        fireEvent.click(buttons[2]);
       });
 
       expect(mockInvoke).toHaveBeenCalledWith("add_visitor_points", {
